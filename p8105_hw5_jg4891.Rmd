@@ -99,3 +99,40 @@ Effect size increases as mu increases.
 The sample and true mean are overall equal, although rejected mean are higher when true mean equals to 1.
 
 
+## Problem 3
+
+From the raw data, we have 7209 female, 40739 male, and 4231 people who didn't
+disclose their sex.
+
+```{r}
+homi <- read_csv("homicide-data.csv")
+homi |>
+  count(victim_sex)
+```
+
+
+```{r}
+homi_summary <- homi %>%
+  mutate(
+    city_state = paste(city, state, sep = ", "),
+    unsolved = disposition %in% c("Closed without arrest", "Open/No arrest")
+  ) %>%
+  group_by(city_state) %>%
+  summarize(
+    total_homicides = n(),
+    unsolved_homicides = sum(unsolved, na.rm = TRUE)
+  )
+
+homi_summary
+
+```
+
+
+
+
+
+
+
+
+
+
