@@ -154,9 +154,40 @@ For Baltimore, the estimated proportion is `r estimated_prop`, with a confidence
 
 
 ```{r}
+city_props <- homi %>%
+  mutate(
+    city_state = paste(city, state, sep = ", "),
+    unsolved = disposition %in% c("Closed without arrest", "Open/No arrest")
+  ) %>%
+  group_by(city_state) %>%
+  summarize(
+    num_unsolved = sum(unsolved),
+    num_total = n(),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    pt = map2(num_unsolved, num_total, ~ prop.test(.x, .y)),
+    tidy = map(pt, tidy)
+  ) %>%
+  unnest(tidy) %>%
+  select(city_state, estimate, conf.low, conf.high)
 
+city_props
 ```
 
 
+```{r}
+city_props %>%
+  mutate(city_state = fct_reorder(city_state, estimate)) %>%
+  ggplot(aes(x = city_state, y = estimate)) +
+  geom_point() +
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high), width = 0.2) +
+  coord_flip() +
+  labs(
+    x = "City",
+    y = "Estimated proportion unsolved",
+    title = "Unsolved Homicide Proportions by City (95% CI)"
+  )
+```
 
 
