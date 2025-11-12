@@ -127,11 +127,35 @@ homi_summary
 
 ```
 
+```{r}
+balt <- homi %>%
+  filter(city == "Baltimore", state == "MD") %>%
+  mutate(
+    unsolved = disposition %in% c("Closed without arrest", "Open/No arrest")
+  )
+
+num_unsolved <- sum(balt$unsolved, na.rm = TRUE)
+num_total <- nrow(balt)
+pt <- prop.test(num_unsolved, num_total)
+pt_tidy <- tidy(pt)
+
+estimated_prop <- pt_tidy$estimate
+lower_ci <- pt_tidy$conf.low
+upper_ci <- pt_tidy$conf.high
+
+estimated_prop
+lower_ci
+upper_ci
+
+```
+For Baltimore, the estimated proportion is `r estimated_prop`, with a confidence interval (`r lower_ci`,
+`r upper_ci`).
 
 
 
+```{r}
 
-
+```
 
 
 
