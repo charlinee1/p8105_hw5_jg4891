@@ -60,25 +60,42 @@ ggplot(birthday_df, aes(x = group_size, y = probability)) +
 ```{r}
 n <- 30
 sigma <- 5
-mu <- 0
+mu_vals <- 0:6
 n_sim <- 5000
 
-sim_results <- expand_grid(
-  mu = mu,
-  iter = 1:n_sim
-) |>
+sim <- expand_grid(mu = mu_vals, iter = 1:n_sim) |>
   mutate(
-    data = map(mu, ~ rnorm(n, mean = .x, sd = sigma)),
-    test = map(data, ~ t.test(.x, mu = 0)),
-    tidy = map(test, tidy),
-    mu_hat = map_dbl(tidy, "estimate"),
-    p_value = map_dbl(tidy, "p.value"),
-    reject = p_value < 0.05
+    x = map(mu, ~ rnorm(n, .x, sigma)),
+    t = map(x, ~ tidy(t.test(.x, mu = 0))),
+    mu_hat = map_dbl(t, "estimate"),
+    p = map_dbl(t, "p.value"),
+    reject = p < 0.05
   )
-
 ```
 
+```{r}
+# power for each mu
+power_df <- sim |> group_by(mu) |> summarize(power = mean(reject))
 
+ggplot(power_df, aes(mu, power)) +
+  geom_point() + geom_line() +
+  labs(x = "True μ", y = "Power")
 
+# average estimates
+means_df <- sim |> group_by(mu) |> 
+  summarize(
+    avg_all = mean(mu_hat),
+    avg_rej = mean(mu_hat[reject])
+  )
+ggplot(means_df, aes(mu)) +
+  geom_line(aes(y = avg_all)) +
+  geom_line(aes(y = avg_rej), color = "red") +
+  geom_point(aes(y = avg_all)) +
+  geom_point(aes(y = avg_rej), color = "red") +
+  labs(x = "True μ", y = "Average µ̂",
+       title = "Black = all samples, Red = rejected samples")
+```
+Effect size increases as mu increases. 
+The sample and true mean are overall equal, although rejected mean are higher when true mean equals to 1.
 
 
